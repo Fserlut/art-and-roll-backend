@@ -1,4 +1,6 @@
-const UserModel = require('../models/user-model');
+const UserModel = require('../models/user.model');
+const tokenService = require('../service/token.service');
+const UserDto = require('../dtos/user.dtos');
 
 class UserService {
     async registration(email, password) {
@@ -28,20 +30,22 @@ class UserService {
         await user.save();
     }
 
-    async login(email, password) {
-        const user = await UserModel.findOne({email})
-        if (!user) {
-            throw ApiError.BadRequest('Пользователь с таким email не найден')
+    async login(phone, code) {
+        const user = await UserModel.findOne({phone});
+        let candidateCode = user.smsCodes.filter(codeBD => codeBD.value === code)[0];
+        if (!candidateCode) {
+            return {status: 400, data: {error: {message: 'Неверный код подтверждения'}}};
+        } else {
+            const created = new Date(candidateCode.created);
+            const experedDate = new Date(new Date(candidateCode.created).setSeconds(new Date(candidateCode.created).getSeconds() + candidateCode.expered));
+            let isAccepted = experedDate >= new Date();
+            if (isAccepted) {
+                const userDto = new UserDto(user);
+                const tokens = tokenService.generateTokens({...userDto});
+                return {status: 200, data: {success: true, message: 'Успешно', tokens, user: userDto}}
+            }
+            return {status: 423, data: {error: {message: 'Срок действия кода истек', success: false}}}
         }
-        const isPassEquals = await bcrypt.compare(password, user.password);
-        if (!isPassEquals) {
-            throw ApiError.BadRequest('Неверный пароль');
-        }
-        const userDto = new UserDto(user);
-        const tokens = tokenService.generateTokens({...userDto});
-
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
-        return {...tokens, user: userDto}
     }
 
     async logout(refreshToken) {

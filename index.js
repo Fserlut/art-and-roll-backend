@@ -1,3 +1,5 @@
+require('dotenv').config()
+const cookieParser = require('cookie-parser')
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -7,7 +9,7 @@ const PORT = process.env.PORT || 5000;
 const app = express()
 
 app.use(express.json());
-app.use(cors({origin: ['capacitor://localhost:8100', 'http://localhost:8100', 'http://localhost:8100']}));
+app.use(cors({origin: ['http://localhost', 'capacitor://localhost:8100', 'http://localhost:8100', 'http://localhost:8100']}));
 app.use('/api', router);
 
 const start = async () => {

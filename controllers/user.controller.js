@@ -1,9 +1,10 @@
-// const userService = require('../service/user-service');
 // const ApiError = require('../exceptions/api-error');
+const userService = require('../service/user.service');
 const UserModel = require('../models/user.model');
 const fetch = require('node-fetch');
 const { URL } = require('url');
-
+const UserDto = require('../dtos/user.dtos');
+const tokenService = require('../service/token.service');
 const SMS_AERO_API_KEY = 'KnjQmXzDddmDxgeqpcZ7D2PrpT';
 
 const createCode = () => {
@@ -18,7 +19,7 @@ class UserController {
 	async findUser(req, res) {
 		let { phone } = req.body;
 		const user = await UserModel.findOne({phone});
-		res.json({user});
+		res.json({isActive: !!user});
 	}
 
 	async create(req, res) {
@@ -76,26 +77,8 @@ class UserController {
 	async login(req, res) {
 		try {
 			const {code, phone} = req.body;
-			const user = await UserModel.findOne({phone});
-			let candidateCode = user.smsCodes.filter(codeBD => codeBD.value === code)[0];
-			if (!candidateCode) {
-				res.status(400).json({error: {message: 'Неверный код подтверждения'}});
-			} else {
-				const created = new Date(candidateCode.created);
-				const experedDate = new Date(new Date(candidateCode.created).setSeconds(new Date(candidateCode.created).getSeconds() + candidateCode.expered));
-				let isAccepted = experedDate >= new Date();
-				let data = {
-					status: isAccepted ? 200 : 423,
-					data: {
-						error: !isAccepted ? {
-							message: 'Срок действия кода истек'
-						} : false,
-						success: isAccepted,
-						message: isAccepted ? 'Успешно' : 'Срок действия кода истек'
-					}
-				}
-				res.status(data.status).json({...data.data})
-			}
+			let userData = await userService.login(phone, code);
+			res.status(userData.status).json(userData);
 		} catch (e) {
 			console.log(e);
 			res.status(500).json({error: {message: 'Ошибка на сервере'}});
