@@ -4,13 +4,19 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const router = require('./router/index')
+const errorMiddleware = require('./middlewares/error.middleware');
 
 const PORT = process.env.PORT || 5000;
 const app = express()
 
 app.use(express.json());
-app.use(cors({origin: ['http://localhost', 'capacitor://localhost', 'capacitor://localhost:8100', 'http://localhost:8100', 'http://localhost:8100']}));
+app.use(cookieParser());
+app.use(cors({
+	credentials: true,
+	origin: ['http://localhost', 'capacitor://localhost', 'capacitor://localhost:8100', 'http://localhost:8100', 'http://localhost:8100']
+}));
 app.use('/api', router);
+app.use(errorMiddleware);
 
 const start = async () => {
     try {

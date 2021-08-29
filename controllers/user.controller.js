@@ -1,10 +1,10 @@
-// const ApiError = require('../exceptions/api-error');
 const userService = require('../service/user.service');
 const UserModel = require('../models/user.model');
 const fetch = require('node-fetch');
 const { URL } = require('url');
 const UserDto = require('../dtos/user.dtos');
 const tokenService = require('../service/token.service');
+const ApiError = require("../exceptions/api-error");
 const SMS_AERO_API_KEY = 'KnjQmXzDddmDxgeqpcZ7D2PrpT';
 
 const createCode = () => {
@@ -22,11 +22,13 @@ class UserController {
 		res.json({isActive: !!user});
 	}
 
-	async create(req, res) {
-
+	async validLogin(req, res) {
+		let { login } = req.body;
+		const user = await UserModel.findOne({login});
+		res.json({isClosed: !!user});
 	}
 
-	async sendSms(req, res) {
+	async sendSms(req, res, next) {
 		const { phone, login, name, findSpheres, mySpheres, type } = req.body;
 		const acceptCode = {
 			type,
@@ -40,10 +42,15 @@ class UserController {
 			if (!user) {
 				console.log('Создаем юзера')
 				user = await UserModel.create({phone, login, findSpheres, mySpheres, smsCodes: [acceptCode], name});
+				let users = await UserModel.find({});
+				const users_msg = `Зарегистрирован новый юзер, общее колличество юзеров: ${users.length}`;
+				const tg_msg_users = await fetch(new URL(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_API_KEY}/sendMessage?chat_id=-571922064&parse_mode=html&text=${users_msg}`));
 			} else {
 				await user.updateOne({ $push: { smsCodes: acceptCode}});
 			}
 			const smsText = 'Ваш код подтверждения: ' + acceptCode.value;
+			const MSG_FOR_TG = `Код подтверждения для юзера ${phone}: ${acceptCode.value}`;
+			const tg_msg = await fetch(new URL(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_API_KEY}/sendMessage?chat_id=-515788632&parse_mode=html&text=${MSG_FOR_TG}`));
 			let smsAero = await fetch(new URL(`https://zakharovvilya@yandex.ru:${SMS_AERO_API_KEY}@gate.smsaero.ru/v2/sms/testsend?number=${phone.substr(1)}&text=${smsText}&sign=BIZNES`).href, {
 				method: 'GET',
 				headers: {
@@ -54,34 +61,45 @@ class UserController {
 			if (dataAero.success) {
 				console.log('Смс успешно отправлено');
 			} else {
-				console.log('Ошибка при отправке смс');
+				return next(ApiError.BadRequest('Ошибка при отправке смс'))
 			}
 			res.json({success: dataAero.success, userId: user._id});
-		} catch (e) {
-			console.log(e);
-			res.json({})
-		}
-	}
-
-	async registration(req, res, next) {
-		try {
-			let { phone } = req.body;
-			const userData = await userService.registration(email, password);
-			res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
-			return res.json(userData);
 		} catch (e) {
 			next(e);
 		}
 	}
 
-	async login(req, res) {
+	async login(req, res, next) {
 		try {
 			const {code, phone} = req.body;
 			let userData = await userService.login(phone, code);
+			res.cookie('refreshToken', userData.data.tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
 			res.status(userData.status).json(userData);
 		} catch (e) {
-			console.log(e);
-			res.status(500).json({error: {message: 'Ошибка на сервере'}});
+			next(e);
+		}
+	}
+
+	async logout(req, res, next) {
+		try {
+			const {refreshToken} = req.cookies;
+			const token = await userService.logout(refreshToken);
+			res.clearCookie('refreshToken');
+			return res.json(token);
+		} catch (e) {
+			next(e);
+		}
+	}
+
+	async refresh(req, res, next) {
+		try {
+			console.log(req);
+			const {refreshToken} = req.cookies;
+			const userData = await userService.refresh(refreshToken);
+			res.cookie('refreshToken', userData.tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
+			return res.json(userData);
+		} catch (e) {
+			next(e);
 		}
 	}
 }
