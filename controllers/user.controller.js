@@ -16,6 +16,16 @@ const createCode = () => {
 }
 
 class UserController {
+	async updateAvatar(req, res, next) {
+		const { base64, login } = req.body;
+		try {
+			let data = await userService.updateAvatar(base64, login);
+			res.json({ data });
+		} catch (e) {
+			next(e);
+		}
+	}
+
 	async findUser(req, res) {
 		let { phone } = req.body;
 		const user = await UserModel.findOne({phone});
