@@ -28,7 +28,7 @@ class UserService {
 			}
 			const upload = await s3.Upload({
 				buffer,
-				name: `${new Date().toLocaleString()}_avatar.jpeg`,
+				name: `${new Date().toISOString()}_avatar.jpeg`,
 			}, `${user._id}/avatar/`);
 			const avatarUrl = upload.Location;
 			await UserModel.updateOne({login}, {$set: {avatar: avatarUrl}});
