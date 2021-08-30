@@ -19,7 +19,6 @@ app.use(cors({
 app.use('/api', router);
 app.use(errorMiddleware);
 
-
 const start = async () => {
 	try {
 		await mongoose.connect('mongodb+srv://admin:admin@cluster0.d4rpi.mongodb.net/art&roll?retryWrites=true&w=majority', {
