@@ -21,14 +21,14 @@ class UserService {
 		});
 		try {
 			const buffer = helpers.toBuffer(helpers._base64ToArrayBuffer(base64));
-			let removed = await s3.Remove(`${user._id}/avatar/${user._id}_avatar.jpeg`);
+			let removed = await s3.Remove(`${user._id}/avatar`);
 			console.log('removed = ', removed);
 			if (!removed) {
 				throw ApiError.BadRequest('Ошибка при загрузке фотографии');
 			}
 			const upload = await s3.Upload({
 				buffer,
-				name: `${user._id}_avatar.jpeg`,
+				name: `${new Date().toLocaleString()}_avatar.jpeg`,
 			}, `${user._id}/avatar/`);
 			const avatarUrl = upload.Location;
 			await UserModel.updateOne({login}, {$set: {avatar: avatarUrl}});
