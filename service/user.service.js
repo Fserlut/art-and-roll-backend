@@ -21,6 +21,11 @@ class UserService {
 		});
 		try {
 			const buffer = helpers.toBuffer(helpers._base64ToArrayBuffer(base64));
+			let removed = await s3.Remove(`${user._id}/avatar/${user._id}_avatar.jpeg`);
+			console.log('removed = ', removed);
+			if (!removed) {
+				throw ApiError.BadRequest('Ошибка при загрузке фотографии');
+			}
 			const upload = await s3.Upload({
 				buffer,
 				name: `${user._id}_avatar.jpeg`,
