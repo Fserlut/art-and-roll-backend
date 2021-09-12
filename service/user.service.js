@@ -1,4 +1,6 @@
 const UserModel = require('../models/user.model');
+const ArtsService = require('../service/arts.service');
+const RollsService = require('../service/rolls.service');
 const tokenService = require('../service/token.service');
 const UserDto = require('../dtos/user.dtos');
 const ApiError = require("../exceptions/api-error");
@@ -54,7 +56,9 @@ class UserService {
 				const tokens = tokenService.generateTokens({...userDto});
 				await tokenService.saveToken(userDto.id, tokens.refreshToken);
 				await UserModel.updateOne({phone}, {$pull: {smsCodes: {...candidateCode}}});
-				return {status: 200, data: {success: true, message: 'Успешно', tokens, user: userDto}}
+				let artsCounter = await ArtsService.getTotalArts(userDto.id);
+				let rollsCounter = await RollsService.getTotalRolls(userDto.id);
+				return {status: 200, data: {success: true, message: 'Успешно', tokens, user: {...userDto, artsCounter, rollsCounter}}}
 			}
 			throw ApiError.BadRequest(`Срок действия кода истек`)
 		}

@@ -1,5 +1,9 @@
 const userService = require('../service/user.service');
 const UserModel = require('../models/user.model');
+const ArtsModel = require('../models/arts.model');
+const RollsModel = require('../models/rolls.model');
+const ArtsService = require('../service/arts.service');
+const RollsService = require('../service/rolls.service');
 const fetch = require('node-fetch');
 const { URL } = require('url');
 const UserDto = require('../dtos/user.dtos');
@@ -39,7 +43,7 @@ class UserController {
 	}
 
 	async sendSms(req, res, next) {
-		const { phone, login, name, findSpheres, mySpheres, type } = req.body;
+		const { phone, login, name, findSpheres, mySpheres, type, birthday } = req.body;
 		const acceptCode = {
 			type,
 			value: createCode(),
@@ -51,7 +55,11 @@ class UserController {
 			console.log(acceptCode);
 			if (!user) {
 				console.log('Создаем юзера')
-				user = await UserModel.create({phone, login, findSpheres, mySpheres, smsCodes: [acceptCode], name});
+				user = await UserModel.create({phone, login, findSpheres, mySpheres, smsCodes: [acceptCode], name, registerDate: +new Date, birthday});
+				const arts = await ArtsModel.create({ user: user._id });
+				await user.updateOne({$set: {arts: arts._id}});
+				const rolls = await RollsModel.create({ user: user._id });
+				await user.updateOne({$set: {rolls: rolls._id}});
 				let users = await UserModel.find({});
 				const users_msg = `Зарегистрирован новый юзер, общее колличество юзеров: ${users.length}`;
 				const tg_msg_users = await fetch(new URL(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_API_KEY}/sendMessage?chat_id=-571922064&parse_mode=html&text=${users_msg}`));
@@ -105,9 +113,11 @@ class UserController {
 		try {
 			const { refreshToken } = req.body;
 			const userData = await userService.refresh(refreshToken);
+			let artsCounter = await ArtsService.getTotalArts(userData.user.id);
+			let rollsCounter = await RollsService.getTotalRolls(userData.user.id);
 			console.log('userData = ', userData);
 			res.cookie('refreshToken', userData.tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
-			return res.json(userData);
+			return res.json({tokens: userData.tokens, user: {...userData.user, artsCounter, rollsCounter}});
 		} catch (e) {
 			next(e);
 		}
