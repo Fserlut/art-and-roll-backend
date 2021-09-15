@@ -8,6 +8,23 @@ const helpers = require("../helpers/index");
 const EasyYandexS3 = require("easy-yandex-s3");
 
 class UserService {
+	async getUserData(token) {
+		let data = await tokenService.validateAccessToken(token);
+		let user = await UserModel.findOne({phone: data.phone});
+		if (!user) {
+			throw ApiError.UnauthorizedError();
+		}
+		return ({
+			name: user.name,
+			avatar: user.avatar,
+			phone: user.phone,
+			login: user.login,
+			registerDate: user.registerDate,
+			birthday: user.birthday,
+			profileDescription: user.description
+	})
+	}
+
 	async updateAvatar(base64, login) {
 		let user = await UserModel.findOne({login});
 		if (!user) {

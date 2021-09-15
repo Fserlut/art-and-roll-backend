@@ -30,6 +30,15 @@ class UserController {
 		}
 	}
 
+	async getUserData(req, res, next) {
+		try {
+			let data = await userService.getUserData(req.headers.authorization.split(' ')[1]);
+			res.json({ user: data });
+		} catch (e) {
+			next(e);
+		}
+	}
+
 	async findUser(req, res) {
 		let { phone } = req.body;
 		const user = await UserModel.findOne({phone});

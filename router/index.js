@@ -14,5 +14,6 @@ router.post('/check-code', userController.login);
 router.post('/logout', userController.logout);
 router.post('/refresh', userController.refresh);
 router.post('/update-avatar', authMiddleware, userController.updateAvatar);
+router.get('/user', authMiddleware, userController.getUserData);
 
 module.exports = router
