@@ -10,8 +10,9 @@ const UserSchema = new Schema({
 	smsCodes: { type: Object, requred: true },
 	registerDate: { type: String },
 	birthday: { type: String },
-	arts: {type: Schema.Types.ObjectId, ref: 'Arts'},
-	rolls: {type: Schema.Types.ObjectId, ref: 'Rolls'},
+	arts: { type: Schema.Types.ObjectId, ref: 'Arts' },
+	rolls: { type: Schema.Types.ObjectId, ref: 'Rolls' },
+	profileDescription: { type: String, default: '' },
 
 })
 

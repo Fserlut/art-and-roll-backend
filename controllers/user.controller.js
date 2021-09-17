@@ -124,7 +124,6 @@ class UserController {
 			const userData = await userService.refresh(refreshToken);
 			let artsCounter = await ArtsService.getTotalArts(userData.user.id);
 			let rollsCounter = await RollsService.getTotalRolls(userData.user.id);
-			console.log('userData = ', userData);
 			res.cookie('refreshToken', userData.tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
 			return res.json({tokens: userData.tokens, user: {...userData.user, artsCounter, rollsCounter}});
 		} catch (e) {

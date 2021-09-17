@@ -4,7 +4,6 @@ const router = new Router();
 const authMiddleware = require('../middlewares/auth.middleware');
 
 router.get('/start', (req, res) => {
-	console.log(req);
 	res.send('hi there');
 });
 router.post('/valid-login', userController.validLogin);

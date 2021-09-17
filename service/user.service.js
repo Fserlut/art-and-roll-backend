@@ -21,7 +21,7 @@ class UserService {
 			login: user.login,
 			registerDate: user.registerDate,
 			birthday: user.birthday,
-			profileDescription: user.description
+			profileDescription: user.profileDescription
 	})
 	}
 
@@ -41,7 +41,6 @@ class UserService {
 		try {
 			const buffer = helpers.toBuffer(helpers._base64ToArrayBuffer(base64));
 			let removed = await s3.Remove(`${user._id}/avatar`);
-			console.log('removed = ', removed);
 			if (!removed) {
 				throw ApiError.BadRequest('Ошибка при загрузке фотографии');
 			}
