@@ -21,8 +21,10 @@ class UserService {
 			login: user.login,
 			registerDate: user.registerDate,
 			birthday: user.birthday,
-			profileDescription: user.profileDescription
-	})
+			profileDescription: user.profileDescription,
+			mySpheres: user.mySpheres,
+			findSpheres: user.findSpheres,
+		})
 	}
 
 	async updateAvatar(base64, login) {
