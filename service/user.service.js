@@ -8,6 +8,25 @@ const helpers = require("../helpers/index");
 const EasyYandexS3 = require("easy-yandex-s3");
 
 class UserService {
+	async getUserData(token) {
+		let data = await tokenService.validateAccessToken(token);
+		let user = await UserModel.findOne({phone: data.phone});
+		if (!user) {
+			throw ApiError.UnauthorizedError();
+		}
+		return ({
+			name: user.name,
+			avatar: user.avatar,
+			phone: user.phone,
+			login: user.login,
+			registerDate: user.registerDate,
+			birthday: user.birthday,
+			profileDescription: user.profileDescription,
+			mySpheres: user.mySpheres,
+			findSpheres: user.findSpheres,
+		})
+	}
+
 	async updateAvatar(base64, login) {
 		let user = await UserModel.findOne({login});
 		if (!user) {
@@ -24,7 +43,6 @@ class UserService {
 		try {
 			const buffer = helpers.toBuffer(helpers._base64ToArrayBuffer(base64));
 			let removed = await s3.Remove(`${user._id}/avatar`);
-			console.log('removed = ', removed);
 			if (!removed) {
 				throw ApiError.BadRequest('Ошибка при загрузке фотографии');
 			}

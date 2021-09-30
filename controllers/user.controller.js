@@ -30,6 +30,15 @@ class UserController {
 		}
 	}
 
+	async getUserData(req, res, next) {
+		try {
+			let data = await userService.getUserData(req.headers.authorization.split(' ')[1]);
+			res.json({ user: data });
+		} catch (e) {
+			next(e);
+		}
+	}
+
 	async findUser(req, res) {
 		let { phone } = req.body;
 		const user = await UserModel.findOne({phone});
@@ -115,7 +124,6 @@ class UserController {
 			const userData = await userService.refresh(refreshToken);
 			let artsCounter = await ArtsService.getTotalArts(userData.user.id);
 			let rollsCounter = await RollsService.getTotalRolls(userData.user.id);
-			console.log('userData = ', userData);
 			res.cookie('refreshToken', userData.tokens.refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true})
 			return res.json({tokens: userData.tokens, user: {...userData.user, artsCounter, rollsCounter}});
 		} catch (e) {
