@@ -14,18 +14,18 @@ app.use(express.urlencoded({limit: '50mb', extended: true}));
 app.use(cookieParser());
 app.use(cors({
 	credentials: true,
-	origin: ['http://localhost', 'capacitor://localhost', 'capacitor://localhost:8100', 'http://localhost:8100', 'http://localhost:8100']
+	origin: ['http://localhost:8080', 'http://localhost', 'capacitor://localhost', 'capacitor://localhost:8100', 'http://localhost:8100', 'http://localhost:8100']
 }));
 app.use('/api', router);
 app.use(errorMiddleware);
 
 const start = async () => {
 	try {
-		await mongoose.connect('mongodb+srv://admin:admin@cluster0.d4rpi.mongodb.net/art&roll?retryWrites=true&w=majority', {
-			useNewUrlParser: true,
-			useUnifiedTopology: true,
-			useCreateIndex: true,
-		})
+		// await mongoose.connect('mongodb+srv://admin:admin@cluster0.d4rpi.mongodb.net/art&roll?retryWrites=true&w=majority', {
+		// 	useNewUrlParser: true,
+		// 	useUnifiedTopology: true,
+		// 	useCreateIndex: true,
+		// })
 		app.listen(PORT, () => console.log(`Server started on PORT = ${PORT}`))
 	} catch (e) {
 		console.log(e);
